@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+    </head>
+<body >
+  <script>
+
+    class SmallScriptTable{
+      constructor(num_rows,num_columns,data,row_header,column_header){
+        this.num_rows=num_rows;
+         this.num_columns=num_columns;
+         this.data_bak=data;
+         this.modifiable=[];
+         this.row_header=row_header;
+         this.column_header=column_header;
+    }}
+
+    class ScriptTable{
+      num_columns;
+      num_rows;
+      data;
+      row_header;
+      column_header;
+      inputs;
+      table;
+    
+      constructor(num_rows,num_columns,data,row_header,column_header){
+         this.num_rows=num_rows;
+         this.num_columns=num_columns;
+         this.data=data;
+         this.data_bak=deepCopy2DArray(this.data,this.num_rows,this.num_columns);
+         this.modifiable=[];
+         this.row_header=row_header;
+         this.column_header=column_header;
+         for(let i=0;i<num_rows;i++){
+          let tmp=[];
+          for (let j=0; j<num_columns; j++){
+            if(data[i][j]==""){
+              tmp.push(true);
+            }
+            else{
+              tmp.push(false);
+            }
+          }
+          this.modifiable.push(tmp);
+        } 
+      this.addTextInputs();
+      var _this=this;
+      this.inputs=this.generateCheckboxes();
+      this.table=this.generateTable();
+      document.body.appendChild(this.table);
+      this.createButton= document.createElement('button');
+      this.createButton.innerText= 'Register';
+      this.createButton.onclick=function(){_this.buttonPress()};
+
+      document.body.appendChild(this.createButton);
+
+
+
+      }
+
+      buttonPress(){
+        var flag=0;
+        if(this.nameinput.value=="") { flag=1;
+        window.alert("You have not inser your name");}
+        if(this.surnameinput.value=="") { flag=1;
+        window.alert("You have not inser your surname");}
+        if(this.emailinput.value=="") { flag=1;
+        window.alert("You have not inser your email");}
+        if(flag==0){
+          this.createButton.disabled=true;
+          for(let i=0; i<this.num_rows; i++){
+            for (let j=0; j<this.num_columns; j++){
+                if(this.inputs[i][j].checked){
+                  this.data[i][j]=this.nameinput.value+"_"+this.surnameinput.value+"_"+this.emailinput.value;
+                }
+            }
+          }
+        }
+        var _this=this;
+        $(document).ready(function() {
+    $.ajax({
+        type: "GET",
+        url: "hello.csv",
+        dataType: "text",
+        async: "false",
+        success: function(data2) {Initialization_2(data2);
+          console.log(_this.data_bak);
+          console.log(script_table_2.data_bak);
+          if(deepCompare2DArray(_this.data_bak,script_table_2.data_bak,_this.num_rows,_this.num_columns)){
+      ArraytoCSV(_this.data,_this.row_header,_this.column_header);
+     }
+     else { 
+        window.alert("you have been to slow, reload the page");
+     }
+}
+     });
+});
+      }
+      
+
+      addTextInputs(){
+      this.row_name=document.createElement('tr');
+      this.nametext=document.createElement('td');
+      this.nametext.textContent='Name';
+      this.nameinput=document.createElement("INPUT");
+      this.nameinput.setAttribute("type", "text");
+      this.nameinput.value="";
+      this.row_name.appendChild(this.nametext);
+      this.row_name.appendChild(this.nameinput);
+      document.body.appendChild(this.row_name);
+      this.row_surname=document.createElement('tr');
+      this.surnametext=document.createElement('td');
+      this.surnametext.textContent='Surname';
+      this.surnameinput=document.createElement("INPUT");
+      this.surnameinput.setAttribute("type", "text");
+      this.surnameinput.value="";
+      this.row_surname.appendChild(this.surnametext);
+      this.row_surname.appendChild(this.surnameinput);
+      document.body.appendChild(this.row_surname);
+      this.row_email=document.createElement('tr');
+      this.emailtext=document.createElement('td');
+      this.emailtext.textContent='Email';
+      this.emailinput=document.createElement("INPUT");
+      this.emailinput.setAttribute("type", "text");
+      this.emailinput.value="";
+      this.row_email.appendChild(this.emailtext);
+      this.row_email.appendChild(this.emailinput);
+      document.body.appendChild(this.row_email);
+      }
+
+
+      get num_rows(){
+        return this.num_rows;
+      }
+      get num_columns(){
+        return this.num_columns;
+      }
+      blockNear(row,column){
+        for (let j=0; j<this.num_columns;j++){
+          if(j!=column){
+            if(this.modifiable[row][j]) this.inputs[row][j].disabled=true;
+          }
+        }
+        for (let j=0; j<this.num_rows;j++){
+          if(j!=row){ 
+            if(this.modifiable[j][column]) this.inputs[j][column].disabled=true;
+          }
+        }
+      }
+      unblockNear(row,column){
+        for (let j=0; j<this.num_columns;j++){
+          if(j!=column && this.modifiable[row][j]) this.inputs[row][j].disabled=false;
+        }
+        for (let j=0; j<this.num_rows;j++){
+          if(j!=row && this.modifiable[j][column]) this.inputs[j][column].disabled=false;
+        }
+        for(let i=0; i<this.num_rows;i++){
+          for (let j=0; j<this.num_columns;j++){
+            if(this.inputs[i][j].checked && this.modifiable[i][j]) this.blockNear(i,j);
+          }
+        } 
+      }
+
+      generateCheckboxes(){
+        var checkboxes=[];
+        for (var i = 0; i < this.num_rows; i++){  
+          let tmp=[];
+        for (var j = 0; j < this.num_columns; j++) {
+          var x = document.createElement("INPUT");
+          x.setAttribute("type", "checkbox"); 
+          tmp.push(x);
+        }
+        checkboxes.push(tmp);
+      }
+      return checkboxes;
+      }
+  
+      Onclick(row,column){
+        if (this.inputs[row][column].checked){
+        this.blockNear(row,column);
+        }
+        if (!this.inputs[row][column].checked){
+        this.unblockNear(row,column);
+        }
+      }
+
+
+      generateTable(){
+        var _this=this;
+        var table = document.createElement('table');
+        var row = document.createElement('tr');
+        var cell=document.createElement('th');
+        cell.textContent="X";
+        row.appendChild(cell);
+        for (var j = 0; j < this.num_columns; j++) {
+          cell=document.createElement('th');
+          cell.textContent=this.row_header[j];
+            row.appendChild(cell);
+        }
+        table.appendChild(row);
+        for (let i = 0; i < this.num_rows; i++) {
+           row = document.createElement('tr');
+            cell=document.createElement('th');
+            cell.textContent=this.column_header[i];
+            row.appendChild(cell);
+            var tmp=[];
+        for (let j = 0; j < this.num_columns; j++) {
+            cell = document.createElement('td');
+            this.inputs[i][j].onclick = function(){_this.Onclick(i,j)};
+            if (!this.modifiable[i][j]){
+              this.inputs[i][j].disabled=true;
+            }
+            cell.appendChild(this.inputs[i][j]);
+            row.appendChild(cell);
+        }
+        table.appendChild(row);
+        }
+        return table;
+      }
+
+      getRow(i){
+        return Math.floor(i/this.num_columns);
+      }
+      getColumn(i){
+        return i%this.num_columns;
+      }
+    }
+    </script>
+  
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.js"></script>
+
+<script>function processData(allText) {
+  var lines=[];
+  var row_header=[];
+  var column_header=[];
+  var allTextLines = allText.split(/\r\n|\n/);
+  var headers = allTextLines[0].split(',');
+  for (var j=1; j<headers.length; j++) {
+              row_header.push(headers[j]);
+  }
+
+  
+  for (var i=1; i<allTextLines.length; i++) {
+      var tmp = allTextLines[i].split(',');
+      if (tmp.length == headers.length) {
+          var tarr = [];
+          column_header.push(tmp[0]);
+          for (var j=1; j<headers.length; j++) {
+              tarr.push(tmp[j]);
+          }
+          lines.push(tarr);
+      }
+  }
+  tot=[row_header,column_header,lines];
+  return tot;
+}
+
+function ArraytoCSV(array,row_header,column_header){
+  var newarr=[];
+  var first_row=[];
+  first_row.push("X");
+  for (let j=0;j<row_header.length;j++){
+    first_row.push(row_header[j]);
+  }  
+  newarr.push(first_row);
+  for(let i=0; i<column_header.length;i++){
+    var tmp=[];
+    tmp.push(column_header[i]);
+          for (let j=0; j<row_header.length;j++){
+            tmp.push(array[i][j]);
+          }
+          newarr.push(tmp);
+        } 
+  
+  var CsvContent=newarr.map(e => e.join(",")).join("\n");
+  var data_csv = new FormData();
+data_csv.append("data" , CsvContent);
+var xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
+xhr.open( 'post', 'hello.php', true );
+xhr.send(data_csv);
+}
+
+
+</script>
+<script>  
+
+
+function deepCopy2DArray(array,num_rows,num_columns){
+        var newarr=[];
+        for(let i=0; i<num_rows; i++){
+         var tmp=[];
+         for (let j=0; j<num_columns;j++){
+            tmp.push(array[i][j]);
+         }
+         newarr.push(tmp);
+        }
+        return newarr;
+        }
+
+
+        function deepCompare2DArray(array,array_2,num_rows,num_columns){
+        var flag=true;
+          for(let i=0; i<num_rows; i++){
+         for (let j=0; j<num_columns;j++){
+          if(array[i][j]!=array_2[i][j]) flag=false;
+          }
+        }
+        return flag;
+        }
+ 
+  function Initialization(allText){
+    tot=processData(allText);
+    row_header=tot[0];
+    column_header=tot[1];
+    lines=tot[2];
+    script_table=new ScriptTable(lines.length,lines[0].length,lines,row_header,column_header);
+  }
+
+  function Initialization_2(allText){
+    tot_2=processData(allText);
+    row_header_2=tot_2[0];
+    column_header_2=tot_2[1];
+    lines_2=tot_2[2];
+    script_table_2=new SmallScriptTable(lines_2.length,lines[0].length,lines_2,row_header_2,column_header_2);
+  }
+
+</script>
+<script>
+
+
+      $(document).ready(function() {
+    $.ajax({
+        type: "GET",
+        url: "hello.csv",
+        dataType: "text",
+        async: "false",
+        success: function(data) {Initialization(data);}
+     });
+});
+
+
+</script>
+</body>
+
+
+
+</html>
